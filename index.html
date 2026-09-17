@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>옴의 법칙 확인 실험</title>
+<style>
+  :root{
+    --ink:#1b2430;
+    --muted:#5f6c7b;
+    --wood1:#d9b78e;
+    --wood2:#b68358;
+    --wood3:#8a603d;
+    --wire:#d84b40;
+    --wire-dark:#9e2e25;
+    --screen:#08120d;
+    --screen-text:#7fff9a;
+    --meter:#d9e2ea;
+    --meter-dark:#506173;
+    --metal:#cfd6dc;
+    --metal2:#8b949b;
+    --battery1:#454b53;
+    --battery2:#1c2025;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:"Pretendard","Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    color:var(--ink);
+    background:#e9eef4;
+  }
+
+  header{
+    background:linear-gradient(135deg,#0d406f,#1c6da9);
+    color:#fff;
+    text-align:center;
+    padding:22px 16px 18px;
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
+  }
+  header h1{
+    margin:0;
+    font-size:clamp(30px,4vw,50px);
+    font-weight:900;
+    letter-spacing:-1.3px;
+  }
+  .subtitle{
+    margin:10px auto 0;
+    max-width:1100px;
+    font-size:clamp(16px,2vw,23px);
+    line-height:1.5;
+    font-weight:800;
+  }
+  .subtitle span{
+    display:inline-block;
+    margin:3px 8px;
+    padding:6px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.14);
+  }
+
+  .wrap{
+    max-width:1240px;
+    margin:18px auto 26px;
+    padding:0 14px;
+  }
+
+  .guide{
+    display:grid;
+    grid-template-columns:1.2fr 1fr;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .guide > div{
+    background:#fff;
+    border-radius:16px;
+    padding:14px 16px;
+    box-shadow:0 4px 14px rgba(30,45,65,.10);
+  }
+  .guide strong{font-size:18px}
+  .guide p{
+    margin:6px 0 0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+
+  .lab{
+    position:relative;
+    min-height:760px;
+    overflow:hidden;
+    border-radius:24px;
+    border:8px solid var(--wood3);
+    background:
+      linear-gradient(rgba(255,255,255,.08),rgba(255,255,255,.03)),
+      repeating-linear-gradient(
+        90deg,
+        rgba(90,60,30,.07) 0px,
+        rgba(90,60,30,.07) 1px,
+        transparent 1px,
+        transparent 82px
+      ),
+      linear-gradient(180deg,var(--wood1),var(--wood2));
+    box-shadow:0 10px 28px rgba(33,47,61,.22);
+  }
+  .lab::before{
+    content:"";
+    position:absolute;
+    left:24px; top:18px;
+    font-size:20px;
+    font-weight:900;
+    color:rgba(255,255,255,0);
+    letter-spacing:1px;
+    z-index:1;
+  }
+
+  /* Speech bubbles */
+  .control{
+    position:absolute;
+    z-index:15;
+    background:#fff;
+    border:4px solid #264463;
+    border-radius:18px;
+    padding:12px 12px 14px;
+    width:240px;
+    box-shadow:0 7px 18px rgba(0,0,0,.16);
+  }
+  .controlTitle{
+    text-align:center;
+    font-size:19px;
+    font-weight:900;
+    margin-bottom:8px;
+  }
+  .ctrlRow{
+    display:grid;
+    grid-template-columns:54px 1fr 54px;
+    gap:7px;
+    align-items:center;
+  }
+  .arrowBtn{
+    border:0;
+    background:#e6f0fb;
+    color:#10508f;
+    border-radius:12px;
+    font-size:27px;
+    font-weight:900;
+    height:54px;
+    cursor:pointer;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,.08);
+  }
+  .arrowBtn:hover{background:#d6e7fa}
+  .arrowBtn:active{transform:translateY(2px); box-shadow:none}
+  .arrowBtn:focus{outline:4px solid rgba(23,105,194,.28)}
+  .valueBox{
+    background:#101820;
+    color:#7bff9b;
+    font-family:"Consolas","Courier New",monospace;
+    font-size:30px;
+    font-weight:900;
+    text-align:center;
+    padding:10px 4px;
+    border-radius:9px;
+    white-space:nowrap;
+  }
+  .stepText{
+    text-align:center;
+    margin-top:7px;
+    color:#667488;
+    font-size:14px;
+    font-weight:700;
+  }
+
+  /* bubble variants */
+  .voltageCtl{
+    left:20px;
+    top:220px;
+  }
+  .voltageCtl::after{
+    content:"";
+    position:absolute;
+    right:-18px; top:86px;
+    border-width:17px 0 17px 18px;
+    border-style:solid;
+    border-color:transparent transparent transparent #264463;
+  }
+  .voltageCtl::before{
+    content:"";
+    position:absolute;
+    right:-12px; top:90px;
+    border-width:13px 0 13px 14px;
+    border-style:solid;
+    border-color:transparent transparent transparent #fff;
+    z-index:2;
+  }
+
+  .resistanceCtl{
+    left:695px;
+    top:32px;
+  }
+  .resistanceCtl::after{
+    content:"";
+    position:absolute;
+    left:108px; bottom:-18px;
+    border-width:18px 17px 0 17px;
+    border-style:solid;
+    border-color:#264463 transparent transparent transparent;
+  }
+  .resistanceCtl::before{
+    content:"";
+    position:absolute;
+    left:112px; bottom:-12px;
+    border-width:14px 13px 0 13px;
+    border-style:solid;
+    border-color:#fff transparent transparent transparent;
+    z-index:2;
+  }
+
+  /* Wires */
+  .wire{
+    position:absolute;
+    z-index:3;
+    background:var(--wire);
+    border-radius:999px;
+    box-shadow:0 2px 0 var(--wire-dark), 0 3px 6px rgba(0,0,0,.14);
+  }
+  .wire.h{height:12px}
+  .wire.v{width:12px}
+
+  /* Circuit geometry */
+  .w1{left:219px; top:206px; height:18px;}          /* battery + to top wire */
+  .w2{left:225px; top:218px; width:395px;}         /* top left to resistor */
+  .w3{left:888px; top:218px; width:77px;}          /* resistor to right branch */
+  .w4{left:959px; top:218px; height:78px;}         /* to switch top */
+  .w5{left:959px; top:387px; height:113px;}        /* from switch bottom to bottom wire */
+  .w6{left:730px; top:494px; width:235px;}         /* ammeter to right side */
+  .w7{left:225px; top:494px; width:205px;}         /* battery side to ammeter */
+  .w8{left:219px; top:465px; height:35px;}         /* battery - to bottom wire */
+
+  .device{
+    position:absolute;
+    z-index:8;
+    filter:drop-shadow(0 6px 6px rgba(0,0,0,.18));
+  }
+
+  /* Battery */
+  .battery{
+    left:170px; top:224px;
+    width:110px; height:240px;
+    background:linear-gradient(180deg,#626973 0%, var(--battery1) 24%, var(--battery2) 100%);
+    border-radius:56px 56px 34px 34px;
+    border:5px solid #15181d;
+    overflow:visible;
+  }
+  .battery .topCap{
+    position:absolute;
+    left:20px; top:-10px;
+    width:70px; height:18px;
+    background:linear-gradient(180deg,#f2f5f7,#a4afb8);
+    border:3px solid #6a737a;
+    border-radius:18px 18px 6px 6px;
+  }
+  .battery .nub{
+    position:absolute;
+    left:40px; top:-24px;
+    width:30px; height:18px;
+    background:linear-gradient(180deg,#eef2f6,#b9c2ca);
+    border:3px solid #707981;
+    border-radius:10px 10px 4px 4px;
+  }
+  .battery .bottomCap{
+    position:absolute;
+    left:14px; bottom:-10px;
+    width:82px; height:16px;
+    background:linear-gradient(180deg,#d3dbe1,#87919a);
+    border:3px solid #687179;
+    border-radius:6px 6px 16px 16px;
+  }
+  .battery .plus{
+    position:absolute;
+    left:116px; top:-18px;
+    color:#c53a2d;
+    font-size:34px;
+    font-weight:900;
+    text-shadow:0 1px 0 #fff;
+  }
+  .battery .minus{
+    position:absolute;
+    left:116px; bottom:-24px;
+    color:#1d3958;
+    font-size:38px;
+    font-weight:900;
+    text-shadow:0 1px 0 #fff;
+  }
+  .battery .label{
+    position:absolute;
+    inset:auto 10px 18px 10px;
+    padding:8px 6px;
+    text-align:center;
+    background:rgba(255,255,255,.92);
+    border-radius:14px;
+    font-size:22px;
+    font-weight:900;
+    color:#223446;
+  }
+
+  /* Resistor (nichrome coil) */
+  .resistor{
+    left:620px; top:178px;
+    width:268px; height:80px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .resistor svg{
+    width:100%;
+    height:100%;
+    overflow:visible;
+  }
+  .coilLabel{
+    position:absolute;
+    left:50%;
+    top:72px;
+    transform:translateX(-50%);
+    background:rgba(255,255,255,.93);
+    border:3px solid rgba(54,68,84,.3);
+    border-radius:12px;
+    font-size:22px;
+    font-weight:900;
+    padding:3px 14px;
+    white-space:nowrap;
+  }
+
+  /* Switch vertical */
+  .switch{
+    left:900px; top:296px;
+    width:120px; height:170px;
+    background:#eef2f4;
+    border:5px solid #46535d;
+    border-radius:22px;
+    text-align:center;
+    padding-top:8px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .switch:focus{outline:5px solid rgba(23,105,194,.32)}
+  .switch .label{
+    font-size:20px;
+    font-weight:900;
+    color:#263847;
+  }
+  .switch .contactArea{
+    position:relative;
+    height:95px;
+    margin-top:2px;
+  }
+  .switch .topDot,
+  .switch .bottomDot{
+    position:absolute;
+    left:44px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:#cb8c28;
+    border:4px solid #6a4b16;
+    z-index:3;
+  }
+  .switch .topDot{top:8px}
+  .switch .bottomDot{top:74px}
+  .switch .blade{
+    position:absolute;
+    left:55px;
+    top:84px;
+    width:58px;
+    height:10px;
+    background:#6e767b;
+    border:2px solid #3b4045;
+    border-radius:999px;
+    transform-origin:left center;
+    transform:rotate(-60deg);
+    transition:transform .18s ease;
+    z-index:2;
+  }
+  .switch.closed .blade{transform:rotate(-90deg)}
+  .switch .state{
+    position:absolute;
+    left:0; right:0; bottom:5px;
+    font-size:14px; font-weight:900;
+    color:#b43c34;
+  }
+  .switch.closed .state{color:#176847}
+
+  /* Ammeter */
+  .ammeter{
+    left:430px; top:417px;
+    width:300px; height:165px;
+    background:linear-gradient(180deg,#f3f6f9,var(--meter));
+    border:6px solid var(--meter-dark);
+    border-radius:30px;
+    text-align:center;
+    padding:14px 16px;
+  }
+  .ammeter::before,
+  .ammeter::after{
+    content:"";
+    position:absolute;
+    top:76px;
+    width:32px; height:12px;
+    background:#58626a;
+    border-radius:999px;
+  }
+  .ammeter::before{left:-32px}
+  .ammeter::after{right:-32px}
+  .ammeter .title{
+    font-size:23px;
+    font-weight:900;
+    color:#25384a;
+    margin-bottom:8px;
+  }
+  .display{
+    background:var(--screen);
+    color:var(--screen-text);
+    font-family:"Consolas","Courier New",monospace;
+    font-weight:900;
+    letter-spacing:1px;
+    text-shadow:0 0 8px rgba(127,255,154,.58);
+    border:5px inset #465148;
+    border-radius:12px;
+    padding:15px 8px 12px;
+    min-height:76px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:42px;
+  }
+  .ammeter .unit{
+    margin-top:8px;
+    font-size:18px;
+    font-weight:800;
+    color:#51606f;
+  }
+
+  /* Electron animation layer */
+  .electron-layer{
+    position:absolute;
+    inset:0;
+    z-index:6;
+    pointer-events:none;
+  }
+  .electron{
+    position:absolute;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff6b9 0%, #c4f2ff 20%, #53d3ff 58%, #1690e8 100%);
+    box-shadow:0 0 10px rgba(130,232,255,.95), 0 0 18px rgba(60,190,255,.8);
+    color:#ffffff;
+    font-size:15px;
+    font-weight:900;
+    line-height:22px;
+    text-align:center;
+    transform:translate(-50%,-50%);
+    opacity:0;
+  }
+  .lab.on .electron{opacity:1}
+
+  .statusBar{
+    position:absolute;
+    z-index:10;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:18px;
+    width:min(92%,860px);
+    background:rgba(255,255,255,.96);
+    border:3px solid rgba(42,54,68,.22);
+    border-radius:16px;
+    text-align:center;
+    padding:11px 16px;
+    font-size:18px;
+    font-weight:900;
+  }
+  .statusBar em{
+    font-style:normal;
+    color:#0f6c4b;
+  }
+
+  .footerNote{
+    margin-top:14px;
+    background:#fff;
+    border-radius:15px;
+    padding:13px 15px;
+    box-shadow:0 4px 14px rgba(30,45,65,.09);
+    color:#4f5b68;
+    font-size:15px;
+    line-height:1.6;
+  }
+
+
+  .copyrightNotice{
+    position:absolute;
+    right:18px;
+    bottom:14px;
+    z-index:11;
+    font-size:12px;
+    line-height:1.35;
+    color:rgba(30,40,52,.82);
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(70,85,100,.18);
+    border-radius:8px;
+    padding:5px 8px;
+    text-align:right;
+    font-weight:700;
+    box-shadow:0 2px 6px rgba(0,0,0,.06);
+  }
+
+  @media (max-width:1000px){
+    .guide{grid-template-columns:1fr}
+    .lab{min-height:1100px}
+    .wire,.electron-layer{display:none}
+    .voltageCtl{left:10px; top:40px}
+    .resistanceCtl{left:50%; transform:translateX(-50%); top:180px}
+    .battery{left:50%; transform:translateX(-50%); top:330px}
+    .resistor{left:50%; transform:translateX(-50%); top:600px}
+    .switch{left:50%; transform:translateX(-50%); top:740px}
+    .ammeter{left:50%; transform:translateX(-50%); top:930px}
+    .statusBar{display:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>옴의 법칙 확인 실험</h1>
+  <div class="subtitle">
+    <span>전압이 증가할 때 전류는 어떻게 변할까?</span>
+    <span>저항이 증가할 때 전류는 어떻게 변할까?</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="guide" aria-label="실험 안내">
+    <div>
+      <strong>실험 방법</strong>
+      <p>전압 또는 저항의 ▲▼ 버튼을 눌러 값을 바꾸고, 전류계의 값을 관찰해 보세요. 한 번 누를 때마다 0.5씩 변합니다. 스위치는 처음에 열려 있으므로, 실험을 시작할 때 직접 닫아 보세요.</p>
+    </div>
+    <div>
+      <strong>관찰 포인트</strong>
+      <p>① 저항이 일정할 때 전압을 바꾸기 ② 전압이 일정할 때 저항을 바꾸기 ③ 스위치가 열릴 때와 닫힐 때 전류의 변화를 보기</p>
+    </div>
+  </section>
+
+  <section class="lab" id="lab" aria-label="옴의 법칙 가상 실험실">
+    <div class="control voltageCtl">
+      <div class="controlTitle">건전지 전압</div>
+      <div class="ctrlRow">
+        <button class="arrowBtn" id="vDown" aria-label="전압 0.5V 낮추기">▼</button>
+        <div class="valueBox" id="voltageDisplay">1.0 V</div>
+        <button class="arrowBtn" id="vUp" aria-label="전압 0.5V 높이기">▲</button>
+      </div>
+      <div class="stepText">0.5 V씩 조절</div>
+    </div>
+
+    <div class="control resistanceCtl">
+      <div class="controlTitle">저항의 크기</div>
+      <div class="ctrlRow">
+        <button class="arrowBtn" id="rDown" aria-label="저항 0.5옴 낮추기">▼</button>
+        <div class="valueBox" id="resistanceDisplay">1.0 Ω</div>
+        <button class="arrowBtn" id="rUp" aria-label="저항 0.5옴 높이기">▲</button>
+      </div>
+      <div class="stepText">0.5 Ω씩 조절</div>
+    </div>
+
+    <!-- wires -->
+    <div class="wire v w1"></div>
+    <div class="wire h w2"></div>
+    <div class="wire h w3"></div>
+    <div class="wire v w4"></div>
+    <div class="wire v w5"></div>
+    <div class="wire h w6"></div>
+    <div class="wire h w7"></div>
+    <div class="wire v w8"></div>
+
+    <!-- battery -->
+    <div class="device battery" aria-label="건전지">
+      <div class="topCap"></div>
+      <div class="nub"></div>
+      <div class="bottomCap"></div>
+      <div class="plus">+</div>
+      <div class="minus">−</div>
+      <div class="label">건전지</div>
+    </div>
+
+    <!-- resistor -->
+    <div class="device resistor" aria-label="니크롬선 저항">
+      <svg viewBox="0 0 268 80" role="img" aria-label="스프링 모양의 저항">
+        <line x1="0" y1="40" x2="40" y2="40" stroke="#70777e" stroke-width="8" stroke-linecap="round"/>
+        <line x1="228" y1="40" x2="268" y2="40" stroke="#70777e" stroke-width="8" stroke-linecap="round"/>
+        <path d="M40 40
+                 C48 20, 56 20, 64 40
+                 C72 60, 80 60, 88 40
+                 C96 20, 104 20, 112 40
+                 C120 60, 128 60, 136 40
+                 C144 20, 152 20, 160 40
+                 C168 60, 176 60, 184 40
+                 C192 20, 200 20, 208 40
+                 C214 54, 220 54, 228 40"
+              fill="none" stroke="#73512c" stroke-width="10" stroke-linecap="round"/>
+      </svg>
+      <div class="coilLabel">저항</div>
+    </div>
+
+    <!-- switch -->
+    <div class="device switch" id="switch" tabindex="0" role="button" aria-pressed="false" aria-label="스위치 열림. 클릭하여 닫기">
+      <div class="label">스위치</div>
+      <div class="contactArea">
+        <div class="topDot"></div>
+        <div class="bottomDot"></div>
+        <div class="blade"></div>
+      </div>
+      <div class="state" id="switchState">열림</div>
+    </div>
+
+    <!-- ammeter -->
+    <div class="device ammeter">
+      <div class="title">전류계</div>
+      <div class="display" id="currentDisplay">0.00 A</div>
+      <div class="unit">흐르는 전류의 세기</div>
+    </div>
+
+    <!-- electron motion overlay -->
+    <svg class="electron-layer" viewBox="0 0 1200 760" preserveAspectRatio="none" aria-hidden="true">
+      <path id="electronPath"
+            d="M225 465
+               L225 500
+               L430 500
+               L730 500
+               L965 500
+               L965 388
+               L965 296
+               L965 218
+               L888 218
+               L620 218
+               L225 218"
+            fill="none" stroke="transparent" stroke-width="4"/>
+    </svg>
+    <div class="electron-layer" id="electronLayer" aria-hidden="true"></div>
+
+    <div class="statusBar" id="statusBar">
+      현재 설정: <em>스위치가 열려 있어 전류가 흐르지 않음 → 0.00 A</em>
+    </div>
+
+    <div class="copyrightNotice">
+      © COPYRIGHT 김기현 2026<br>
+      All Rights Reserved.
+    </div>
+  </section>
+
+  <div class="footerNote">
+    <strong>교사용 참고:</strong> 이 파일은 인터넷 연결 없이도 실행됩니다. 전압은 0~12 V, 저항은 0.5~20 Ω 범위에서 조절됩니다. 스위치를 닫으면 전류계 값이 변하고, 전류가 흐를 때에만 전자(−) 알갱이가 건전지의 −극에서 +극 방향으로 이동합니다.
+  </div>
+</main>
+
+<script>
+(() => {
+  let voltage = 1.0;
+  let resistance = 1.0;
+  let closed = false;
+  let currentValue = 0;
+
+  const voltageDisplay = document.getElementById('voltageDisplay');
+  const resistanceDisplay = document.getElementById('resistanceDisplay');
+  const currentDisplay = document.getElementById('currentDisplay');
+  const statusBar = document.getElementById('statusBar');
+  const switchEl = document.getElementById('switch');
+  const switchState = document.getElementById('switchState');
+  const lab = document.getElementById('lab');
+
+  function fmt1(n){ return n.toFixed(1); }
+  function fmt2(n){ return n.toFixed(2); }
+
+  function update(){
+    const current = closed ? voltage / resistance : 0;
+    currentValue = current;
+    voltageDisplay.textContent = `${fmt1(voltage)} V`;
+    resistanceDisplay.textContent = `${fmt1(resistance)} Ω`;
+    currentDisplay.textContent = `${fmt2(current)} A`;
+
+    if (closed){
+      switchEl.classList.add('closed');
+      switchState.textContent = '닫힘';
+      switchEl.setAttribute('aria-pressed', 'true');
+      switchEl.setAttribute('aria-label', '스위치 닫힘. 클릭하여 열기');
+      if (voltage > 0) lab.classList.add('on');
+      else lab.classList.remove('on');
+      statusBar.innerHTML = `현재 설정: <em>전압 ${fmt1(voltage)} V / 저항 ${fmt1(resistance)} Ω / 전류 ${fmt2(current)} A</em>`;
+    } else {
+      switchEl.classList.remove('closed');
+      switchState.textContent = '열림';
+      switchEl.setAttribute('aria-pressed', 'false');
+      switchEl.setAttribute('aria-label', '스위치 열림. 클릭하여 닫기');
+      lab.classList.remove('on');
+      statusBar.innerHTML = `현재 설정: <em>스위치가 열려 있어 전류가 흐르지 않음 → 0.00 A</em>`;
+    }
+  }
+
+  function changeVoltage(delta){
+    voltage = Math.min(12, Math.max(0, +(voltage + delta).toFixed(1)));
+    update();
+  }
+  function changeResistance(delta){
+    resistance = Math.min(20, Math.max(0.5, +(resistance + delta).toFixed(1)));
+    update();
+  }
+  function toggleSwitch(){
+    closed = !closed;
+    update();
+  }
+
+  document.getElementById('vDown').addEventListener('click', () => changeVoltage(-0.5));
+  document.getElementById('vUp').addEventListener('click', () => changeVoltage(0.5));
+  document.getElementById('rDown').addEventListener('click', () => changeResistance(-0.5));
+  document.getElementById('rUp').addEventListener('click', () => changeResistance(0.5));
+  switchEl.addEventListener('click', toggleSwitch);
+  switchEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      toggleSwitch();
+    }
+  });
+
+  /* Electron animation */
+  const electronLayer = document.getElementById('electronLayer');
+  const path = document.getElementById('electronPath');
+  const particles = [];
+  const particleCount = 10;
+  const totalLength = path.getTotalLength();
+
+  function makeElectron(){
+    const el = document.createElement('div');
+    el.className = 'electron';
+    el.textContent = '−';
+    electronLayer.appendChild(el);
+    return el;
+  }
+
+  for(let i=0; i<particleCount; i++){
+    particles.push({
+      el: makeElectron(),
+      offset: i / particleCount
+    });
+  }
+
+  let lastTs = null;
+  let travel = 0;
+
+  function animate(ts){
+    if(lastTs == null) lastTs = ts;
+    const dt = (ts - lastTs) / 1000;
+    lastTs = ts;
+
+    if(closed && voltage > 0){
+      // 전류가 클수록 전자 이동 속도가 빨라지도록 설정
+      // 너무 빨라져서 보기 어려워지지 않게 최대 속도는 제한
+      const effectiveSpeed = Math.min(520, 18 + currentValue * 48); // px per second
+      travel = (travel + effectiveSpeed * dt) % totalLength;
+      for(const p of particles){
+        const len = (travel + p.offset * totalLength) % totalLength;
+        const pt = path.getPointAtLength(len);
+        p.el.style.left = `${pt.x}px`;
+        p.el.style.top = `${pt.y}px`;
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  update();
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
